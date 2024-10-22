@@ -21,6 +21,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DOT_PATH = os.getenv('DOT_PATH')
+GEM_API_KEY = os.getenv('GEMINI_KEY')
+
+#CONFIGURE GEMINI API
+
+import google.generativeai as genai
+import os
+
+genai.configure(api_key=GEM_API_KEY)
+
+
 
 # Load the pre-trained model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
@@ -31,7 +41,13 @@ print(nltk.data.path)
 nltk.data.path.append('/path/to/your/nltk_data')
 nltk.download('punkt_tab')
 
-# Language detection using guesslang
+def code_refactor(code):
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    template="Refactor the following code and give only the refactored code as the answer: "+ str(code)
+    
+    response = model.generate_content(template)
+    
+    return response.text
 
 
 # Preprocessing function
@@ -59,14 +75,23 @@ def visualize_ast(code):
     dot.write_png(output_path, prog=DOT_PATH)
     return output_path
 
-# Refactoring suggestion (rename variable as an example)
-# def suggest_refactoringg(code):
-#     project = Project('.')
-#     resource = project.get_file('test.py')  # Save code as test.py
-#     rename = Rename(resource, 5)  # Example: Rename something at line 5
-#     changes = rename.get_changes('new_name')
-#     return changes
+def code_summary(code):
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    
+    template="Act as an expert software developer and give a detailed summary of the following code and give only the answer: "+ str(code)
+    
+    response = model.generate_content(template)
+    
+    return response.text
 
+def lang_detect(code):
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    
+    template="Detect the language of the following code and give only the language name as a single word answer: "+ str(code)
+    
+    response = model.generate_content(template)
+    
+    return response.text
 
 
 
@@ -103,11 +128,12 @@ code_input = st.text_area("Paste your code here:", height=300)
 if st.button("Analyze"):
     if code_input:
         # 1. Language Detection
-        
-        
-        
+        st.write("Language Detected: ")
+        lang = lang_detect(code_input)
+        st.info(lang)
         
         # 2. Bug Classification
+        st.write("Bug Classification:")
         result = analyze_code(model, tokenizer, code_input)
         if result == 1:
             st.success("The code looks good!")
@@ -115,9 +141,28 @@ if st.button("Analyze"):
             st.warning("The code may contain bugs.")
 
         # 3. Code Structure (AST Visualization)
-        visualize_ast(code_input)
+        
         st.write("Abstract Syntax Tree (AST) visualization:")
-        st.image("ast.png")
+        try:
+            visualize_ast(code_input)
+            st.image("ast.png")
+        except Exception as e:
+            print(e)
+            st.error("AST is only for Python code. Use python or dont ask AST")
+            
+        
+        # 4. Code Summary
+        
+        st.write("Code Summary:")
+        summary = code_summary(code_input)
+        st.info(summary)
+        
+        # 5. Code Refactoring
+        
+        st.write("Refactored Code:")
+        ref_code = code_refactor(code_input)
+        st.info(ref_code)
+        
 
         
     else:

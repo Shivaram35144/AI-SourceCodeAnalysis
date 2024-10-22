@@ -1,0 +1,51 @@
+1. 
+using namespace std;
+
+int binarySearch(int arr[], int left, int right, int x) {
+  if (right >= left) {
+    int mid = left + (right - left) / 2;
+
+    if (arr[mid] == x)
+      return mid;
+
+    if   
+ (arr[mid] > x)
+      return binarySearch(arr, left, mid - 1, x);
+
+    return binarySearch(arr, mid + 1, right, x);
+  }
+
+  return -1;
+}
+
+
+
+2. 
+
+def merge_sort(arr):
+  if len(arr) > 1:
+    mid = len(arr) // 2
+    L = arr[:mid]
+    R = arr[mid:]
+    merge_sort(L)
+    merge_sort(R)
+    i=0
+
+    while i < len(L) and j < len(R):
+      if L[i] <= R[j]:
+        arr[k] = L[i]
+        i += 1
+      else:
+        arr[k] = R[j]
+        j += 1
+      k += 1
+
+    while i < len(L):
+      arr[k] = L[i]
+      i += 1
+      k += 1
+
+    while j < len(R):
+      arr[k] = R[j]
+      j += 1
+      k += 1
