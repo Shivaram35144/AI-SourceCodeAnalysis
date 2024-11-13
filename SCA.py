@@ -1,53 +1,35 @@
 import streamlit as st
+import os
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-
 import nltk
-
+import google.generativeai as genai
 import ast
-import astor
-
 import pydot
 
-import graphviz
-
-from rope.base.project import Project
-from rope.refactor.rename import Rename
-
-import os
+# Configure Streamlit and NLP Environment
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU
 
 from dotenv import load_dotenv
-
 load_dotenv()
-
-DOT_PATH = os.getenv('DOT_PATH')
 GEM_API_KEY = os.getenv('GEMINI_KEY')
-
-
-import google.generativeai as genai
-import os
+DOT_PATH = os.getenv('DOT_PATH')
 
 genai.configure(api_key=GEM_API_KEY)
 
-
-
-# Load the pre-trained model and tokenizer
+# Load the pre-trained model and tokenizer only once
 tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
 model = AutoModelForSequenceClassification.from_pretrained("microsoft/codebert-base")
 
-# Download NLTK's Punkt tokenizer
-print(nltk.data.path)
-nltk.data.path.append('/path/to/your/nltk_data')
-nltk.download('punkt_tab')
+# Set up NLTK data path
+nltk.data.path.append("/home/appuser/nltk_data")
+nltk.download("punkt", download_dir="/home/appuser/nltk_data")
 
 def code_refactor(code):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    template="Refactor the following code and give only the refactored code as the answer: "+ str(code)
-    
-    response = model.generate_content(template)
-    
+    gen_model = genai.GenerativeModel("gemini-1.5-flash")
+    template = "Refactor the following code and give only the refactored code as the answer: " + str(code)
+    response = gen_model.generate_content(template)
     return response.text
-
 
 # Preprocessing function
 def preprocess_code(code):
@@ -62,65 +44,37 @@ def analyze_code(model, tokenizer, code):
 
 # AST visualization
 def visualize_ast(code):
-    tree = ast.parse(code)
-    dot = pydot.Dot()
-    dot.set('rankdir', 'LR')
-    for node in ast.walk(tree):
-        label = type(node).__name__
-        dot.add_node(pydot.Node(id(node), label=label))
-        for child in ast.iter_child_nodes(node):
-            dot.add_edge(pydot.Edge(id(node), id(child)))
-    output_path = os.path.join(os.getcwd(), 'ast.png')
-    dot.write_png(output_path, prog=DOT_PATH)
-    return output_path
+    try:
+        tree = ast.parse(code)
+        dot = pydot.Dot()
+        dot.set('rankdir', 'LR')
+        for node in ast.walk(tree):
+            label = type(node).__name__
+            dot.add_node(pydot.Node(id(node), label=label))
+            for child in ast.iter_child_nodes(node):
+                dot.add_edge(pydot.Edge(id(node), id(child)))
+        output_path = os.path.join(os.getcwd(), 'ast.png')
+        dot.write_png(output_path, prog=DOT_PATH)
+        return output_path
+    except Exception as e:
+        print("Error generating AST:", e)
+        return None
 
 def code_summary(code):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    
-    template="Act as an expert software developer and give a detailed summary of the following code and give only the answer: "+ str(code)
-    
-    response = model.generate_content(template)
-    
+    gen_model = genai.GenerativeModel("gemini-1.5-flash")
+    template = "Act as an expert software developer and give a detailed summary of the following code: " + str(code)
+    response = gen_model.generate_content(template)
     return response.text
 
 def lang_detect(code):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    
-    template="Detect the language of the following code and give only the language name as a single word answer: "+ str(code)
-    
-    response = model.generate_content(template)
-    
+    gen_model = genai.GenerativeModel("gemini-1.5-flash")
+    template = "Detect the language of the following code: " + str(code)
+    response = gen_model.generate_content(template)
     return response.text
 
-
-
+# Streamlit UI
 st.title("AI-Based Source Code Analysis")
-
 st.write("Upload a source code file or paste your code below for analysis.")
-
-
-
-st.sidebar.title("Disclaimer")
-
-st.sidebar.markdown("""
-
-
-This AI-based source code analysis tool uses a pre-trained machine learning model for detecting general code quality and potential bugs. However, it has the following limitations:
-
-- The model primarily performs **binary classification** of code (correct or potentially buggy).
-- The analysis is based on patterns learned from training data and may not be accurate for all cases.
-
-For detailed debugging and security auditing, consider using specialized code analysis tools.
-""")
-
-st.sidebar.markdown("<hr>", unsafe_allow_html=True)
-
-st.sidebar.markdown("""
-### Expert Coders:
-- K K SHIVARAM 21BCE6171
-- CHANAKYA B M  21BCE1010
-- S ANISH RISHI 21BCE5999
-""")
 
 code_input = st.text_area("Paste your code here:", height=300)
 
@@ -128,7 +82,7 @@ code_input = st.text_area("Paste your code here:", height=300)
 if st.button("Analyze"):
     if code_input:
         # 1. Language Detection
-        st.write("Language Detected: ")
+        st.write("Language Detected:")
         lang = lang_detect(code_input)
         st.info(lang)
 
@@ -142,19 +96,17 @@ if st.button("Analyze"):
 
         # 3. Code Structure (AST Visualization)
         st.write("Abstract Syntax Tree (AST) visualization:")
-        try:
-            visualize_ast(code_input)
-            st.image("ast.png")
-        except Exception as e:
-            print(e)
-            st.error("AST is only for Python code. Use python or dont ask AST")
-            
-        
+        ast_image = visualize_ast(code_input)
+        if ast_image:
+            st.image(ast_image)
+        else:
+            st.warning("AST visualization is only available for Python code.")
+
         # 4. Code Summary
         st.write("Code Summary:")
         summary = code_summary(code_input)
         st.info(summary)
-        
+
         # 5. Code Refactoring
         st.write("Refactored Code:")
         ref_code = code_refactor(code_input)
