@@ -23,7 +23,6 @@ load_dotenv()
 DOT_PATH = os.getenv('DOT_PATH')
 GEM_API_KEY = os.getenv('GEMINI_KEY')
 
-#CONFIGURE GEMINI API
 
 import google.generativeai as genai
 import os
@@ -95,33 +94,34 @@ def lang_detect(code):
 
 
 
-# Streamlit UI
 st.title("AI-Based Source Code Analysis")
 
 st.write("Upload a source code file or paste your code below for analysis.")
 
 
-st.info("Note: This tool only works for python codes ! Please give code in python only")
 
-
-
-#disclaimer
 st.sidebar.title("Disclaimer")
 
 st.sidebar.markdown("""
-**Disclaimer:**
+
 
 This AI-based source code analysis tool uses a pre-trained machine learning model for detecting general code quality and potential bugs. However, it has the following limitations:
 
 - The model primarily performs **binary classification** of code (correct or potentially buggy).
-- It may not detect **syntax errors** or provide detailed feedback on specific error types.
-- This tool is not designed to detect **security vulnerabilities** or **language-specific runtime errors**.
 - The analysis is based on patterns learned from training data and may not be accurate for all cases.
 
 For detailed debugging and security auditing, consider using specialized code analysis tools.
 """)
 
-# Text area for user to input code
+st.sidebar.markdown("<hr>", unsafe_allow_html=True)
+
+st.sidebar.markdown("""
+### Expert Coders:
+- K K SHIVARAM 21BCE6171
+- CHANAKYA B M  21BCE1010
+- S ANISH RISHI 21BCE5999
+""")
+
 code_input = st.text_area("Paste your code here:", height=300)
 
 # Analyze button
@@ -131,7 +131,7 @@ if st.button("Analyze"):
         st.write("Language Detected: ")
         lang = lang_detect(code_input)
         st.info(lang)
-        
+
         # 2. Bug Classification
         st.write("Bug Classification:")
         result = analyze_code(model, tokenizer, code_input)
@@ -141,7 +141,6 @@ if st.button("Analyze"):
             st.warning("The code may contain bugs.")
 
         # 3. Code Structure (AST Visualization)
-        
         st.write("Abstract Syntax Tree (AST) visualization:")
         try:
             visualize_ast(code_input)
@@ -152,18 +151,13 @@ if st.button("Analyze"):
             
         
         # 4. Code Summary
-        
         st.write("Code Summary:")
         summary = code_summary(code_input)
         st.info(summary)
         
         # 5. Code Refactoring
-        
         st.write("Refactored Code:")
         ref_code = code_refactor(code_input)
         st.info(ref_code)
-        
-
-        
     else:
         st.error("Please paste your code.")
