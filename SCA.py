@@ -41,7 +41,7 @@ def preprocess_code(code):
     return " ".join(tokens)
 
 # Bug classification using the model
-def analyze_code(model, tokenizer, code):
+def analyze_code( code):
     
 
     gen_model = genai.GenerativeModel("gemini-1.5-flash")
@@ -81,7 +81,7 @@ try:
 
             # 2. Bug Classification
             st.write("Bug Classification:")
-            result = analyze_code(model, tokenizer, code_input)
+            result = analyze_code(code_input)
             st.info(result)
 
             # 3. Code Structure (AST Visualization)
