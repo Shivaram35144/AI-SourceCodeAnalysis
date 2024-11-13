@@ -22,8 +22,9 @@ tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
 model = AutoModelForSequenceClassification.from_pretrained("microsoft/codebert-base")
 
 # Set up NLTK data path
-nltk.data.path.append("/home/appuser/nltk_data")
-nltk.download("punkt", download_dir="/home/appuser/nltk_data")
+nltk_data_dir = os.path.expanduser("~/nltk_data")
+nltk.download("punkt", download_dir=nltk_data_dir)
+nltk.data.path.append(nltk_data_dir)
 
 def code_refactor(code):
     gen_model = genai.GenerativeModel("gemini-1.5-flash")
