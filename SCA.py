@@ -39,27 +39,32 @@ def preprocess_code(code):
 
 # Bug classification using the model
 def analyze_code(model, tokenizer, code):
-    inputs = tokenizer(preprocess_code(code), return_tensors='pt', max_length=512, truncation=True)
-    outputs = model(**inputs)
-    return outputs.logits.argmax().item()
+    # inputs = tokenizer(preprocess_code(code), return_tensors='pt', max_length=512, truncation=True)
+    # outputs = model(**inputs)
+    # return outputs.logits.argmax().item()
+
+    gen_model = genai.GenerativeModel("gemini-1.5-flash")
+    template = "Act as an expert software developer and tell in one line if the code has any syntax errors and where it may occur: " + str(code)
+    response = gen_model.generate_content(template)
+    return response.text
 
 # AST visualization
-def visualize_ast(code):
-    try:
-        tree = ast.parse(code)
-        dot = pydot.Dot()
-        dot.set('rankdir', 'LR')
-        for node in ast.walk(tree):
-            label = type(node).__name__
-            dot.add_node(pydot.Node(id(node), label=label))
-            for child in ast.iter_child_nodes(node):
-                dot.add_edge(pydot.Edge(id(node), id(child)))
-        output_path = os.path.join(os.getcwd(), 'ast.png')
-        dot.write_png(output_path, prog=DOT_PATH)
-        return output_path
-    except Exception as e:
-        print("Error generating AST:", e)
-        return None
+# def visualize_ast(code):
+#     try:
+#         tree = ast.parse(code)
+#         dot = pydot.Dot()
+#         dot.set('rankdir', 'LR')
+#         for node in ast.walk(tree):
+#             label = type(node).__name__
+#             dot.add_node(pydot.Node(id(node), label=label))
+#             for child in ast.iter_child_nodes(node):
+#                 dot.add_edge(pydot.Edge(id(node), id(child)))
+#         output_path = os.path.join(os.getcwd(), 'ast.png')
+#         dot.write_png(output_path, prog=DOT_PATH)
+#         return output_path
+#     except Exception as e:
+#         print("Error generating AST:", e)
+#         return None
 
 def code_summary(code):
     gen_model = genai.GenerativeModel("gemini-1.5-flash")
@@ -90,18 +95,15 @@ if st.button("Analyze"):
         # 2. Bug Classification
         st.write("Bug Classification:")
         result = analyze_code(model, tokenizer, code_input)
-        if result == 1:
-            st.success("The code looks good!")
-        else:
-            st.warning("The code may contain bugs.")
+        st.info(result)
 
         # 3. Code Structure (AST Visualization)
-        st.write("Abstract Syntax Tree (AST) visualization:")
-        ast_image = visualize_ast(code_input)
-        if ast_image:
-            st.image(ast_image)
-        else:
-            st.warning("AST visualization is only available for Python code.")
+        # st.write("Abstract Syntax Tree (AST) visualization:")
+        # ast_image = visualize_ast(code_input)
+        # if ast_image:
+        #     st.image(ast_image)
+        # else:
+        #     st.warning("AST visualization is only available for Python code.")
 
         # 4. Code Summary
         st.write("Code Summary:")
