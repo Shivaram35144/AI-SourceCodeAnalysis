@@ -12,8 +12,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU
 
 from dotenv import load_dotenv
 load_dotenv()
-GEM_API_KEY = os.getenv('GEMINI_KEY')
-DOT_PATH = os.getenv('DOT_PATH')
+# GEM_API_KEY = os.getenv('GEMINI_KEY')
+# DOT_PATH = os.getenv('DOT_PATH')
+
+GEM_API_KEY = st.secrets["GEMINI_KEY"]
+DOT_PATH = st.secrets["DOT_PATH"]
 
 genai.configure(api_key=GEM_API_KEY)
 
