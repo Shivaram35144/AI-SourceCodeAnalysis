@@ -45,7 +45,7 @@ def analyze_code( code):
     
 
     gen_model = genai.GenerativeModel("gemini-1.5-flash")
-    template = "Act as an expert software developer and tell in one line if the code has any syntax errors and where it may occur: " + str(code)
+    template = "Act as an expert software developer and tell in one word (\"syntax error is there\" or \"syntax error is not there\") if the code has any syntax errors and where it may occur: " + str(code)
     response = gen_model.generate_content(template)
     return response.text
 
@@ -53,13 +53,13 @@ def analyze_code( code):
 
 def code_summary(code):
     gen_model = genai.GenerativeModel("gemini-1.5-flash")
-    template = "Act as an expert software developer and give a detailed summary of the following code: " + str(code)
+    template = "Act as an expert software developer and give a one line summary of the following code: " + str(code)
     response = gen_model.generate_content(template)
     return response.text
 
 def lang_detect(code):
     gen_model = genai.GenerativeModel("gemini-1.5-flash")
-    template = "Detect the language of the following code: " + str(code)
+    template = "Detect the coding language of the following code, give answer in one word. If it is ambiguous or there is no language give \"Could not Detect\" as output: " + str(code)
     response = gen_model.generate_content(template)
     return response.text
 
